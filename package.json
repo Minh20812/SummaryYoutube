@@ -1,0 +1,23 @@
+{
+  "name": "get-transcript-youtube",
+  "version": "1.0.0",
+  "description": "Tự động tải transcript từ video YouTube thông qua downsub.com",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "keywords": [
+    "youtube",
+    "transcript",
+    "automation"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "fs-extra": "^11.3.0",
+    "node-fetch": "^3.3.2",
+    "puppeteer": "^24.4.0"
+  }
+}
