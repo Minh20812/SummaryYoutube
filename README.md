@@ -1,59 +1,59 @@
-# Get Transcript Youtube
+# Get YouTube Transcript  
 
-Tool tự động tải transcript (phụ đề) từ danh sách video YouTube thông qua trang downsub.com.
+A tool that automatically downloads transcripts (subtitles) from a list of YouTube videos via downsub.com.  
 
-## Tính năng
+## Features  
 
-- Tự động lấy toàn bộ URL video từ playlist YouTube
-- Tự động truy cập downsub.com và lấy transcript
-- Lưu transcript vào file text với tên là tiêu đề video
-- Ghi nhận lỗi nếu không lấy được transcript
-- Tổng kết số lượng video thành công/thất bại
+- Automatically fetch all video URLs from a YouTube playlist  
+- Automatically access downsub.com and retrieve transcripts  
+- Save transcripts as text files named after the video title  
+- Log errors if transcripts cannot be retrieved  
+- Summarize the number of successful/failed videos  
 
-## Yêu cầu
+## Requirements  
 
-- Node.js
-- pnpm (hoặc npm/yarn)
+- Node.js  
+- pnpm (or npm/yarn)  
 
-## Cài đặt
+## Installation  
 
 ```bash
 # Clone repository
 git clone <repository-url>
 cd GetTranscriptYoutube
 
-# Cài đặt dependencies
+# Install dependencies
 pnpm install
 
-# Cài đặt Chrome cho Puppeteer
+# Install Chrome for Puppeteer
 npx puppeteer browsers install chrome
 ```
 
-## Sử dụng
+## Usage  
 
 ```bash
-node src/index.js "URL_PLAYLIST_YOUTUBE"
+node src/index.js "YOUTUBE_PLAYLIST_URL"
 ```
 
-Ví dụ:
+Example:  
 ```bash
 node src/index.js "https://www.youtube.com/playlist?list=PLFLh04JZg3rOj5rn7dxqw3sGV7sheSkSG"
 ```
 
-## Kết quả
+## Results  
 
-- Các file transcript sẽ được lưu trong thư mục `downloads/`
-- File transcript thành công: `[tiêu_đề_video].txt`
-- File lỗi: `error_[tiêu_đề_video]_[url_video].txt`
+- Transcripts will be saved in the `downloads/` folder  
+- Successful transcript files: `[video_title].txt`  
+- Error files: `error_[video_title]_[video_url].txt`  
 
-## Xử lý lỗi
+## Error Handling  
 
-- Nếu video không có transcript tiếng Việt: Ghi nhận vào file error
-- Nếu có lỗi khi xử lý video: Ghi nhận lỗi và tiếp tục xử lý video tiếp theo
-- Cuối cùng hiển thị tổng kết số lượng video thành công/thất bại
+- If a video does not have a Vietnamese transcript: Log it in an error file  
+- If an error occurs while processing a video: Log the error and continue with the next video  
+- Finally, display a summary of the number of successful/failed videos  
 
-## Lưu ý
+## Notes  
 
-- Đảm bảo có kết nối internet ổn định
-- Có thể mất vài giây để xử lý mỗi video
-- Không đóng trình duyệt trong quá trình chạy
+- Ensure a stable internet connection  
+- Processing each video may take a few seconds  
+- Do not close the browser while running the script  
