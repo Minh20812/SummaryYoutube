@@ -10,7 +10,7 @@ async function setupBrowser() {
    const browser = await puppeteer.launch({
       headless: false,
       defaultViewport: null,
-      args: ["--start-maximized"], // Mở cửa sổ full size
+      args: ["--start-maximized"], // Open window in full size
    });
    const page = await browser.newPage();
    // Set viewport to maximum size
@@ -19,7 +19,7 @@ async function setupBrowser() {
       height: 1080,
    });
 
-   // Thiết lập thư mục tải xuống
+   // Ensure download directory exists
    await fs.ensureDir(DOWNLOAD_DIR);
    const client = await page.target().createCDPSession();
    await client.send("Page.setDownloadBehavior", {
@@ -46,16 +46,34 @@ async function getPlaylistVideos(playlistUrl) {
       });
       await page.goto(playlistUrl);
 
-      // Chờ danh sách video tải
+      // Wait for video list to load
       await page.waitForSelector('a[href*="watch?v="]');
+
+      // Scroll to load all videos in the playlist
+      let previousHeight = 0;
+      let currentHeight = 0;
+      let scrollTries = 0;
+      do {
+         previousHeight = await page.evaluate(
+            "document.documentElement.scrollHeight"
+         );
+         await page.evaluate(
+            "window.scrollTo(0, document.documentElement.scrollHeight)"
+         );
+         await setTimeout(1500);
+         currentHeight = await page.evaluate(
+            "document.documentElement.scrollHeight"
+         );
+         scrollTries++;
+      } while (currentHeight > previousHeight && scrollTries < 50);
 
       // Lấy tất cả URL video trong playlist
       const videoUrls = await page.evaluate(() => {
          const links = document.querySelectorAll('a[href*="watch?v="]');
-         const urls = new Set(); // Sử dụng Set để loại bỏ trùng lặp
+         const urls = new Set(); // Use Set to remove duplicates
          links.forEach((link) => {
             const url = new URL(link.href);
-            // Chỉ lấy các URL có định dạng watch?v=
+            // Only get URLs with format watch?v=
             if (url.searchParams.has("v")) {
                urls.add(url.href);
             }
@@ -66,7 +84,7 @@ async function getPlaylistVideos(playlistUrl) {
       await browser.close();
       return videoUrls;
    } catch (error) {
-      console.error("Lỗi khi lấy danh sách video từ playlist:", error);
+      console.error("Error while fetching video list from playlist:", error);
       return [];
    }
 }
@@ -78,10 +96,10 @@ async function getYouTubeTitle(url) {
          `https://www.youtube.com/oembed?url=http://www.youtube.com/watch?v=${videoId}&format=json`
       );
       const data = await response.json();
-      // Loại bỏ các ký tự không hợp lệ trong tên file
+      // Remove invalid characters from file name
       return data.title.replace(/[<>:"/\\|?*-]/g, "_");
    } catch (error) {
-      console.error("Lỗi khi lấy tiêu đề video:", error);
+      console.error("Error while fetching video title:", error);
       return "unknown_title";
    }
 }
@@ -98,72 +116,72 @@ async function getTranscript(page, videoUrl) {
    try {
       const videoTitle = await getYouTubeTitle(videoUrl);
       const videoId = await getVideoId(videoUrl);
-      console.log(`Đang xử lý video: ${videoTitle}`);
+      console.log(`Processing video: ${videoTitle}`);
 
-      // Truy cập trang downsub.com
+      // Go to downsub.com
       await page.goto("https://downsub.com/");
       await page.waitForSelector('input[name="url"]');
 
-      // Nhập URL video
+      // Enter video URL
       await page.type('input[name="url"]', videoUrl);
 
-      // Click nút tìm kiếm
+      // Click search button
       await page.click('button[type="submit"]');
 
-      // Đợi tối đa 30 giây để tìm nút Raw
+      // Wait up to 30 seconds for Raw button
       try {
          await page.waitForSelector('button[data-title*="[RAW] Vietnamese"]', {
             timeout: 30000,
          });
-         // Click vào nút Raw để hiển thị nội dung
+         // Click Raw button to show content
          const rawButton = await page.$(
             'button[data-title*="[RAW] Vietnamese"]'
          );
          await rawButton.click();
 
-         // Đợi và lấy nội dung text
-         await setTimeout(1000); // Đợi 1 giây để nội dung hiển thị
+         // Wait and get text content
+         await setTimeout(2000); // Wait 2 seconds for content to appear
          const textContent = await page.$eval("pre", (el) => el.textContent);
 
          if (textContent) {
-            // Lưu nội dung vào file
+            // Save content to file
             const filePath = path.join(DOWNLOAD_DIR, `${videoTitle}.txt`);
             await fs.writeFile(filePath, textContent);
-            console.log(`Đã lưu transcript cho video: ${videoTitle}`);
+            console.log(`Transcript saved for video: ${videoTitle}`);
          } else {
-            // Lưu thông tin lỗi vào file
+            // Save error info to file
             const errorPath = path.join(
                DOWNLOAD_DIR,
                `error_${videoTitle}_${videoId}.txt`
             );
-            await fs.writeFile(errorPath, "Không tìm thấy nội dung transcript");
+            await fs.writeFile(errorPath, "Transcript content not found");
             console.log(
-               `Không tìm thấy nội dung transcript cho video: ${videoTitle}`
+               `Transcript content not found for video: ${videoTitle}`
             );
          }
       } catch (error) {
-         // Lưu thông tin lỗi vào file
+         // Save error info to file
          const errorPath = path.join(
             DOWNLOAD_DIR,
             `error_${videoTitle}_${videoId}.txt`
          );
-         await fs.writeFile(errorPath, `Lỗi: ${error.message}`);
+         await fs.writeFile(errorPath, `Error: ${error.message}`);
          console.log(
-            `Không tìm thấy transcript tiếng Việt cho video: ${videoTitle}`
+            `Vietnamese transcript not found for video: ${videoTitle}`
          );
       }
    } catch (error) {
       const videoId = await getVideoId(videoUrl);
       const errorPath = path.join(DOWNLOAD_DIR, `error_unknown_${videoId}.txt`);
-      await fs.writeFile(errorPath, `Lỗi không xác định: ${error.message}`);
-      console.error(`Lỗi khi xử lý video ${videoUrl}:`, error.message);
+      await fs.writeFile(errorPath, `Unknown error: ${error.message}`);
+      console.error(`Error processing video ${videoUrl}:`, error.message);
    }
 }
 
 async function main() {
-   // Yêu cầu người dùng nhập URL playlist
+   // Require user to input playlist URL
    if (process.argv.length < 3) {
-      console.log("Vui lòng cung cấp URL playlist YouTube. Ví dụ:");
+      console.log("Please provide a YouTube playlist URL. Example:");
       console.log(
          "node src/index.js https://www.youtube.com/playlist?list=xxx"
       );
@@ -171,36 +189,39 @@ async function main() {
    }
 
    const playlistUrl = process.argv[2];
-   console.log("Đang lấy danh sách video từ playlist...");
+   console.log("Fetching video list from playlist...");
    const videoUrls = await getPlaylistVideos(playlistUrl);
 
    if (videoUrls.length === 0) {
-      console.log("Không tìm thấy video nào trong playlist.");
+      console.log("No videos found in the playlist.");
       process.exit(1);
    }
 
-   console.log(`Tìm thấy ${videoUrls.length} video trong playlist.`);
+   // Highlight total video count
+   console.log(
+      `[1m[36m==============================\nFound ${videoUrls.length} videos in the playlist.\n==============================[0m`
+   );
 
    const { browser, page } = await setupBrowser();
 
    try {
       for (const videoUrl of videoUrls) {
          await getTranscript(page, videoUrl);
-         await setTimeout(2000); // Đợi giữa các video để tránh quá tải
+         await setTimeout(2000); // Wait between videos to avoid overload
       }
    } finally {
       await browser.close();
    }
 
-   // Hiển thị tổng kết
+   // Show summary
    const files = await fs.readdir(DOWNLOAD_DIR);
    const successFiles = files.filter((file) => !file.startsWith("error_"));
    const errorFiles = files.filter((file) => file.startsWith("error_"));
 
-   console.log("\n=== Tổng kết ===");
-   console.log(`Tổng số video: ${videoUrls.length}`);
-   console.log(`Số video tải thành công: ${successFiles.length}`);
-   console.log(`Số video lỗi: ${errorFiles.length}`);
+   console.log("\n=== Summary ===");
+   console.log(`Total videos: ${videoUrls.length}`);
+   console.log(`Successfully downloaded: ${successFiles.length}`);
+   console.log(`Failed: ${errorFiles.length}`);
 }
 
 main().catch(console.error);
