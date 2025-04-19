@@ -10,7 +10,7 @@ importers:
     dependencies:
       dotenv:
         specifier: ^16.4.7
-        version: 16.4.7
+        version: 16.5.0
       fs-extra:
         specifier: ^11.3.0
         version: 11.3.0
@@ -157,8 +157,8 @@ packages:
   devtools-protocol@0.0.1425554:
     resolution: {integrity: sha512-uRfxR6Nlzdzt0ihVIkV+sLztKgs7rgquY/Mhcv1YNCWDh5IZgl5mnn2aeEnW5stYTE0wwiF4RYVz8eMEpV1SEw==}
 
-  dotenv@16.4.7:
-    resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
+  dotenv@16.5.0:
+    resolution: {integrity: sha512-m/C+AwOAr9/W1UOIZUo232ejMNnJAJtYQjUbHoNTBNTJSvqzzDh7vnrei3o3r3m9blf6ZoDkvcw0VmozNRFJxg==}
     engines: {node: '>=12'}
 
   emoji-regex@8.0.0:
@@ -575,7 +575,7 @@ snapshots:
 
   devtools-protocol@0.0.1425554: {}
 
-  dotenv@16.4.7: {}
+  dotenv@16.5.0: {}
 
   emoji-regex@8.0.0: {}
 
